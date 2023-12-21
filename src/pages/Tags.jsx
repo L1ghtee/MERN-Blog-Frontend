@@ -1,34 +1,40 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-
+import {  useSelector } from 'react-redux';
+import {useParams} from "react-router-dom"
 import Grid from '@mui/material/Grid';
-
+import axios from "../axios";
 import { Post } from '../components/Post';
-import { TagsBlock } from '../components/TagsBlock';
 
-import { fetchPosts, fetchTags } from '../redux/slices/posts';
 
-export const Home = () => {
-  const dispatch = useDispatch();
+
+
+export const Tags = () => {
+  const [data, setData] = React.useState();
+  const [isLoading, setLoading] = React.useState(true);
   const userData = useSelector((state)=>state.auth.data)
   const {posts, tags} = useSelector(state=>state.posts);
-  const isPostsLoading = posts.status === 'loading'
-  const isTagsLoading = tags.status === 'loading'
+
+  const {tag} = useParams();
 
   React.useEffect(()=>{
-    dispatch(fetchPosts());
-    dispatch(fetchTags());
-
-  }, [dispatch])
+    axios.get(`/tags/${tag}`).then(res =>{
+      setData(res.data);
+      console.log(data)
+      setLoading(false);
+    }).catch((err)=>{
+      console.warn(err);
+      alert('Error with get post');
+    })
+  }, [])
   return (
     <>
       
-      <h1>New posts</h1>
-      <Grid container spacing={4}>
+      <h1>#{tag}</h1>
+     
         
       <Grid xs={8} item>
-          {(isPostsLoading ? [...Array(5)] : posts.items).map((obj, index) =>
-            isPostsLoading ? (
+          {(isLoading ? [...Array(5)] : posts.items).map((obj, index) =>
+            isLoading ? (
               <Post key={index} isLoading={true} />
             ) : (
               <Post
@@ -46,11 +52,8 @@ export const Home = () => {
             ),
           )}
         </Grid>
-        <Grid xs={4} item>
-          <TagsBlock items={tags.items} isLoading={isTagsLoading} />
-          
-        </Grid>
-      </Grid>
+        
+     
     </>
   );
 };

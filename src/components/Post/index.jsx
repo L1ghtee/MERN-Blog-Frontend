@@ -1,4 +1,5 @@
 import React from 'react';
+import {useDispatch} from 'react-redux'
 import clsx from 'clsx';
 import {Link} from 'react-router-dom'
 import IconButton from '@mui/material/IconButton';
@@ -10,6 +11,7 @@ import CommentIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 import styles from './Post.module.scss';
 import { UserInfo } from '../UserInfo';
 import { PostSkeleton } from './Skeleton';
+import { fetchRemovePost } from '../../redux/slices/posts';
 
 export const Post = ({
   id,
@@ -25,11 +27,18 @@ export const Post = ({
   isLoading,
   isEditable,
 }) => {
+  const dispatch = useDispatch()
   if (isLoading) {
     return <PostSkeleton />;
   }
 
-  const onClickRemove = () => {};
+  const onClickRemove = () => {
+    if (window.confirm("Are you sure want to delete this post?")) {
+      dispatch(fetchRemovePost(id))
+   
+    }
+    
+  };
 
   return (
     <div className={clsx(styles.root, { [styles.rootFull]: isFullPost })}>
@@ -61,7 +70,7 @@ export const Post = ({
           <ul className={styles.tags}>
             {tags.map((name) => (
               <li key={name}>
-                <Link to={`/tag/${name}`}>#{name}</Link>
+                <Link to={`/tags/${name}`}>#{name}</Link>
               </li>
             ))}
           </ul>
@@ -71,10 +80,7 @@ export const Post = ({
               <EyeIcon />
               <span>{viewsCount}</span>
             </li>
-            <li>
-              <CommentIcon />
-              <span>{commentsCount}</span>
-            </li>
+            
           </ul>
         </div>
       </div>

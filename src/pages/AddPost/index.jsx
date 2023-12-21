@@ -8,10 +8,12 @@ import "easymde/dist/easymde.min.css";
 import styles from "./AddPost.module.scss";
 import { useSelector } from "react-redux";
 import { selectIsAuth } from "../../redux/slices/auth";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useParams } from "react-router-dom";
 import axios from "../../axios";
+import { Bolt } from "@mui/icons-material";
 
 export const AddPost = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const isAuth = useSelector(selectIsAuth);
   const [isLoading, setLoading] = React.useState(false);
@@ -21,17 +23,19 @@ export const AddPost = () => {
   const [imageUrl, setImageUrl] = React.useState("");
   const inputFileRef = React.useRef(null);
 
+  const isEditing = Boolean(id);
+
   const handleChangeFile = async (event) => {
     try {
       const formData = new FormData();
       const file = event.target.files[0];
-      formData.append('image', file);
-      const { data } = await axios.post('/upload', formData);
-      
-     setImageUrl(data.url)
+      formData.append("image", file);
+      const { data } = await axios.post("/upload", formData);
+
+      setImageUrl(data.url);
     } catch (err) {
       console.warn(err);
-      alert('Ошибка при загрузке файла!');
+      alert("Upload file error");
     }
   };
 
@@ -53,15 +57,34 @@ export const AddPost = () => {
         tags,
         text,
       };
-      
-      const { data } = await axios.post("/posts", fields);
-      const id = data._id;
-      navigate(`/posts/${id}`);
+      const { data } = isEditing
+        ? axios.patch(`/posts/${id}`, fields)
+        : axios.post("/posts", fields);
+      const _id = isEditing ? id : data._id;
+      navigate(`/posts/${_id}`);
     } catch (err) {
       console.warn(err);
       alert("Publishng error");
     }
   };
+
+  React.useEffect(() => {
+    if (id) {
+      axios
+        .get(`/posts/${id}`)
+        .then(({ data }) => {
+          setTitle(data.title);
+          setText(data.text);
+          setImageUrl(data.imageUrl);
+          setTags(data.tags.join(","));
+        })
+        .catch((err) => {
+          console.warn(err);
+          alert("Can not get post");
+        });
+    }
+  }, []);
+
   const options = React.useMemo(
     () => ({
       spellChecker: false,
@@ -139,7 +162,7 @@ export const AddPost = () => {
       />
       <div className={styles.buttons}>
         <Button onClick={onSubmit} size="large" variant="contained">
-          Publish
+          {isEditing ? `Save` : `Publish`}
         </Button>
         <a href="/">
           <Button size="large">Cancel</Button>
