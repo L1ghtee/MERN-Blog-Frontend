@@ -54,16 +54,17 @@ export const AddPost = () => {
       const fields = {
         title,
         imageUrl,
-        tags,
+        tags: tags.split(",").map((tag) => tag.trim()), // ✅ тепер це масив
         text,
       };
+
       const { data } = isEditing
-        ? axios.patch(`/posts/${id}`, fields)
-        : axios.post("/posts", fields);
+        ? await axios.patch(`/posts/${id}`, fields)
+        : await axios.post("/posts", fields);
       const _id = isEditing ? id : data._id;
       navigate(`/posts/${_id}`);
     } catch (err) {
-      console.warn(err);
+      console.error("🧨 Axios error:", err.response?.data || err.message || err);
       alert("Publishng error");
     }
   };
